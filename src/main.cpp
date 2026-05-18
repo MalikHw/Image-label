@@ -55,34 +55,26 @@ void updateImageState() {
 	if (!spr) return;
 
 	auto winSize = CCDirector::get()->getWinSize();
-	
-	if (s_isHoldingJump) {
-		// swap to input image
-		auto newPath = utils::string::pathToString(inputImage);
-		auto newTexture = CCTextureCache::sharedTextureCache()->addImage(newPath.c_str(), false);
-		if (newTexture) {
-			spr->setTexture(newTexture);
-			auto size = newTexture->getContentSize();
-			spr->setTextureRect(CCRect(0, 0, size.width, size.height));
-			spr->setScale(inputScale);
-			spr->setPosition({ (inputPosx / 100.f) * winSize.width, (inputPosy / 100.f) * winSize.height });
-			spr->setOpacity((GLubyte)inputOpacity);
-			spr->setRotation(inputRotation);
-		}
-	} else {
-		// swap back to original image
-		auto newPath = utils::string::pathToString(image);
-		auto newTexture = CCTextureCache::sharedTextureCache()->addImage(newPath.c_str(), false);
-		if (newTexture) {
-			spr->setTexture(newTexture);
-			auto size = newTexture->getContentSize();
-			spr->setTextureRect(CCRect(0, 0, size.width, size.height));
-			spr->setScale(scale);
-			spr->setPosition({ (posx / 100.f) * winSize.width, (posy / 100.f) * winSize.height });
-			spr->setOpacity((GLubyte)opacity);
-			spr->setRotation(rotation);
-		}
-	}
+	auto wantPath = utils::string::pathToString(s_isHoldingJump ? inputImage : image);
+	float wantScale = s_isHoldingJump ? inputScale : scale;
+	float wantPx = s_isHoldingJump ? inputPosx : posx;
+	float wantPy = s_isHoldingJump ? inputPosy : posy;
+	int wantOpacity = s_isHoldingJump ? inputOpacity : opacity;
+	int wantRotation = s_isHoldingJump ? inputRotation : rotation;
+
+	auto parent = spr->getParent();
+	int zOrder = spr->getZOrder();
+	spr->removeFromParentAndCleanup(true);
+
+	auto newSpr = CCSprite::create(wantPath.c_str());
+	if (!newSpr) return;
+	newSpr->setAnchorPoint({ 0.5f, 0.275f });
+	newSpr->setScale(wantScale);
+	newSpr->setPosition({ (wantPx / 100.f) * winSize.width, (wantPy / 100.f) * winSize.height });
+	newSpr->setOpacity((GLubyte)wantOpacity);
+	newSpr->setRotation(wantRotation);
+	newSpr->setID("il-image"_spr);
+	parent->addChild(newSpr, zOrder);
 }
 
 class $modify(ILUILayer, UILayer) {
